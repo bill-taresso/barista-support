@@ -279,7 +279,7 @@ tr.done td{opacity:.5}
       if(c.audience)stats.push(el('span',{text:c.audience}));
       box.append(el('div',{class:'tl-item',id:'c-'+c.id},
         el('div',{class:'tl-date',text:c.date?fmtD(c.date):'Χωρίς ημ/νία'}),
-        el('div',null,el('div',{class:'tl-title',text:c.title}),el('div',{class:'sub',text:pname(c.product)+(c.subject?' · «'+c.subject+'»':'')}),stats.length?el('div',{class:'stats'},stats):null,metrics(c)),
+        el('div',null,el('div',{class:'tl-title',text:c.title}),el('div',{class:'sub',text:pname(c.product)+(c.subject?' · «'+c.subject+'»':'')}),c.preview?el('a',{href:c.preview,target:'_blank',rel:'noopener',class:'sub',style:'color:var(--accent);font-weight:600',text:'Προεπισκόπηση email →'}):null,stats.length?el('div',{class:'stats'},stats):null,metrics(c)),
         pill(c.status)));
     });
   }
