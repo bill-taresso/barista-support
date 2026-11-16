@@ -64,6 +64,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .tl-title{font-weight:700}
 .stats{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:4px}
 .stats b{color:var(--ink);font-variant-numeric:tabular-nums}
+.mgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px;max-width:560px}
+.m{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.m b{display:block;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.m span{font-size:12px;color:var(--muted)}
+.m.good b{color:var(--ok)} .m.bad b{color:var(--warn)}
+.links{margin-top:8px;font-size:13px;color:var(--muted)} .links summary{cursor:pointer}
+.links li{display:flex;justify-content:space-between;gap:10px;padding:2px 0} .links li b{color:var(--ink)}
+@media (max-width:560px){.mgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chart{padding:12px 16px 16px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);padding:0 16px 14px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
@@ -238,6 +246,26 @@ tr.done td{opacity:.5}
     });
   }
 
+  const pc=v=>(v==null?'–':v.toLocaleString('el-GR',{maximumFractionDigits:1})+'%');
+  function metrics(c){
+    if(c.status!=='sent'||c.openRate==null)return c.status==='sent'?el('div',{class:'sub',text:'Τα στατιστικά θα εμφανιστούν μετά την πρώτη ενημέρωση από το Mailchimp.'}):null;
+    const t=(lab,rate,cnt,cls)=>el('div',{class:'m '+(cls||'')},el('b',{text:pc(rate)}),el('span',{text:lab+(cnt!=null?' · '+fmtN(cnt):'')}));
+    const box=el('div',null,el('div',{class:'mgrid'},
+      t('Άνοιγμα',c.openRate,c.opens,c.openRate>=c.benchOpen?'good':''),
+      t('Κλικ',c.clickRate,c.clicks,''),
+      t('Bounce',c.bounceRate,c.bounces,c.bounceRate>2?'bad':''),
+      t('Διαγραφές',c.unsubRate,c.unsubs,c.unsubRate>0.5?'bad':'')));
+    const extra=[];
+    if(c.delivered!=null)extra.push('Παραδόθηκαν '+fmtN(c.delivered));
+    if(c.totalOpens!=null)extra.push('Συνολικά ανοίγματα '+fmtN(c.totalOpens));
+    if(c.totalClicks!=null)extra.push('Συνολικά κλικ '+fmtN(c.totalClicks));
+    if(c.benchOpen!=null)extra.push('Μέσος όρος κλάδου '+pc(c.benchOpen));
+    if(c.statsAt)extra.push('Ενημέρωση '+c.statsAt);
+    if(extra.length)box.append(el('div',{class:'stats',text:extra.join(' · ')}));
+    if(c.topLinks&&c.topLinks.length)box.append(el('details',{class:'links'},el('summary',{text:'Πιο δημοφιλή links'}),
+      el('ul',{style:'list-style:none;padding:0;margin:6px 0 0'},c.topLinks.map(l=>el('li',null,el('span',{text:l.label}),el('b',{text:fmtN(l.clicks)}))))));
+    return box;
+  }
   function renderCalendar(){
     const box=$('#tl');box.replaceChildren();
     let L=state.campaigns.slice();
@@ -248,12 +276,10 @@ tr.done td{opacity:.5}
     L.forEach(c=>{
       const stats=[];
       if(c.recipients!=null)stats.push(el('span',null,'Παραλήπτες ',el('b',{text:fmtN(c.recipients)})));
-      if(c.openRate!=null)stats.push(el('span',null,'Άνοιγμα ',el('b',{text:c.openRate+'%'})));
-      if(c.clickRate!=null)stats.push(el('span',null,'Κλικ ',el('b',{text:c.clickRate+'%'})));
       if(c.audience)stats.push(el('span',{text:c.audience}));
       box.append(el('div',{class:'tl-item',id:'c-'+c.id},
         el('div',{class:'tl-date',text:c.date?fmtD(c.date):'Χωρίς ημ/νία'}),
-        el('div',null,el('div',{class:'tl-title',text:c.title}),el('div',{class:'sub',text:pname(c.product)+(c.subject?' · «'+c.subject+'»':'')}),stats.length?el('div',{class:'stats'},stats):null),
+        el('div',null,el('div',{class:'tl-title',text:c.title}),el('div',{class:'sub',text:pname(c.product)+(c.subject?' · «'+c.subject+'»':'')}),stats.length?el('div',{class:'stats'},stats):null,metrics(c)),
         pill(c.status)));
     });
   }
