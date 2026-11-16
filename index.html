@@ -99,6 +99,7 @@ tr.done td{opacity:.5}
     <h1>barista.support<small>Επικοινωνία κατόχων · μόνο για την ομάδα του barista.gr</small></h1>
     <form id="login-form" class="login-form"><label for="login-email" class="sub">Email εταιρείας</label><input id="login-email" type="email" autocomplete="email" required placeholder="π.χ. bill@barista.gr"><button type="submit" class="btn-main" id="login-btn">Στείλε μου link σύνδεσης</button></form>
     <p class="sub" id="login-err"></p>
+    <form id="paste-form" class="login-form" style="margin-top:18px"><label for="paste-link" class="sub">Από την εφαρμογή στην οθόνη Αφετηρίας: πάτα παρατεταμένα το link στο email → Αντιγραφή, και επικόλλησέ το εδώ</label><input id="paste-link" type="url" placeholder="Επικόλληση link από το email"><button type="submit" class="btn-main">Σύνδεση με το link</button></form>
   </div>
 </div>
 <div class="wrap app">
@@ -351,6 +352,11 @@ tr.done td{opacity:.5}
     if(!em){em=($('#login-email').value||'').trim();}
     if(em){auth.signInWithEmailLink(em,location.href).then(()=>{history.replaceState(null,'',location.pathname);}).catch(err=>{$('#login-err').textContent='Το link έληξε ή χρησιμοποιήθηκε. Ζήτα νέο.';});}
     else{$('#login-err').textContent='Γράψε το email σου και πάτα ξανά το link από το email.';}}
+  $('#paste-form').addEventListener('submit',e=>{e.preventDefault();const link=$('#paste-link').value.trim();const out=$('#login-err');
+    let em=(($('#login-email').value||'').trim().toLowerCase());if(!em){try{em=localStorage.getItem('hubEmail')||''}catch(_){}}
+    if(!em){out.textContent='Γράψε πρώτα το email σου στο πάνω πεδίο.';return;}
+    if(!auth.isSignInWithEmailLink(link)){out.textContent='Αυτό δεν είναι link σύνδεσης. Αντέγραψε ολόκληρο το link από το email.';return;}
+    auth.signInWithEmailLink(em,link).catch(err=>{out.textContent='Το link έληξε ή χρησιμοποιήθηκε. Ζήτα νέο.';});});
   $('#logout').addEventListener('click',()=>auth.signOut());
   auth.onAuthStateChanged(u=>{
     document.body.classList.toggle('signed',!!u);
